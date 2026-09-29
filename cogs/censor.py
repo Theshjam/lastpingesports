@@ -2,8 +2,8 @@ import re
 import discord
 from discord.ext import commands
 
-ANYWHERE = ["fuck", "shit", "bitch"]
-WHOLE_WORD = ["ass", "asses", "asshole", "assholes", "dumbass", "jackass", "badass"]
+ANYWHERE = ["fuck", "shit", "bitch", "cunt", "dick", "pussy", "cock", "fag", "faggot", "nigger", "nigga", "slut", "whore", "twat", "douche", "bastard", "bollocks", "bugger", "arsehole"]
+WHOLE_WORD = ["ass", "asses", "asshole", "assholes", "dumbass", "jackass", "badass",]
 ALLOWED = ["bullshit"]
 
 PATTERN = re.compile(
