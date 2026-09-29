@@ -1,29 +1,39 @@
+import re
 import discord
 from discord.ext import commands
 
-intents = discord.Intents.default()
-intents.message_content = True  # Required to read message content
+ANYWHERE = ["fuck", "shit", "bitch"]
+WHOLE_WORD = ["ass", "asses", "asshole", "assholes", "dumbass", "jackass", "badass"]
+ALLOWED = ["bullshit"]
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+PATTERN = re.compile(
+    "|".join(map(re.escape, ANYWHERE)) + r"|\b(" + "|".join(map(re.escape, WHOLE_WORD)) + r")\b",
+    re.IGNORECASE
+)
+ALLOW = re.compile(r"\b(" + "|".join(map(re.escape, ALLOWED)) + r")\b", re.IGNORECASE)
 
-# List of banned words/phrases (lowercase for easy matching)
-banned_words = ["fuck", "shit", "bitch", "ass"]
+class Censor(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
 
-@bot.event
-async def on_message(message):
-    # Ignore messages from the bot itself (prevents infinite loops)
-    if message.author == bot.user:
-        return
+    async def check(self, message):
+        if message.author.bot or not message.guild:
+            return
+        cleaned = ALLOW.sub("", message.content)
+        if PATTERN.search(cleaned):
+            await message.delete()
+            await message.channel.send(
+                f"{message.author.mention} said a bad language word",
+                delete_after=5
+            )
 
-    # Check if any banned word appears in the message
-    if any(word in message.content.lower() for word in banned_words):
-        await message.delete()
-        await message.channel.send(
-            f"{message.author.mention} said a bad language word" 
-        )
-        return  # stop here so it doesn't also process as a command
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        await self.check(message)
 
-    # Important: allows other commands to still work
-    await bot.process_commands(message)
+    @commands.Cog.listener()
+    async def on_message_edit(self, before, after):
+        await self.check(after)
 
-bot.run("YOUR_BOT_TOKEN")
+async def setup(bot):
+    await bot.add_cog(Censor(bot))
