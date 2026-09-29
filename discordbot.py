@@ -2,6 +2,7 @@ import os
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+Guild_ID = os.getenv("GUILD_ID")
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -21,7 +22,9 @@ async def setup_hook():
                 print(f"Loaded {file}")
             except Exception as e:
                 print(f"Skipped {file}: {e}")
-    await bot.tree.sync()
+    guild = discord.Object(id=int(os.getenv("GUILD_ID")))
+    bot.tree.copy_global_to(guild=guild)
+    await bot.tree.sync(guild=guild)
 
 @bot.event
 async def on_ready():
