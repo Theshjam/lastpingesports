@@ -1,30 +1,26 @@
+import re
 import discord
 from discord.ext import commands
 
-intents = discord.Intents.default()
-intents.message_content = True  # Required to read message content
+BANNED_WORDS = ["fuck", "shit", "bitch"]
+PATTERN = re.compile(r"\b(" + "|".join(map(re.escape, BANNED_WORDS)) + r")\b", re.IGNORECASE)
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+class Censor(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
 
-# List of banned words/phrases (lowercase for easy matching)
-banned_words = ["fuck", "shit", "bitch", ""]
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.bot or not message.guild:
+            return
+        if message.author.guild_permissions.manage_messages:
+            return
+        if PATTERN.search(message.content):
+            await message.delete()
+            await message.channel.send(
+                f"{message.author.mention}, said a bad language word.",
+                delete_after=5
+            )
 
-@bot.event
-async def on_message(message):
-    # Ignore messages from the bot itself (prevents infinite loops)
-    if message.author == bot.user:
-        return
-
-    # Check if any banned word appears in the message
-    if any(word in message.content.lower() for word in banned_words):
-        await message.delete()
-        await message.channel.send(
-            f"{message.author.mention}, said a bad language word.",
-            delete_after=5  # auto-deletes the warning after 5 seconds
-        )
-        return  # stop here so it doesn't also process as a command
-
-    # Important: allows other commands to still work
-    await bot.process_commands(message)
-
-bot.run("YOUR_BOT_TOKEN")
+async def setup(bot):
+    await bot.add_cog(Censor(bot))
