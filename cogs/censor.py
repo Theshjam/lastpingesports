@@ -24,7 +24,6 @@ class Censor(commands.Cog):
             await message.delete()
             await message.channel.send(
                 f"{message.author.mention} said a bad language word",
-                delete_after=5
             )
 
     @commands.Cog.listener()
