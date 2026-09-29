@@ -19,7 +19,7 @@ async def on_message(message):
     if any(word in message.content.lower() for word in banned_words):
         await message.delete()
         await message.channel.send(
-            f"{message.author.mention}, that message was removed for containing inappropriate language.",
+            f"{message.author.mention}, said a bad language word.",
             delete_after=5  # auto-deletes the warning after 5 seconds
         )
         return  # stop here so it doesn't also process as a command
