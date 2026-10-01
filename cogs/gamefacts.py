@@ -1,10 +1,12 @@
+import os
 import aiohttp
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "llama3.2"
+MODEL = "gemini-flash-latest"
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
+SYSTEM_PROMPT = "You are a gaming assistant for an esports team. Answer in a few sentences. If you aren't sure, say so."
 
 class Ask(commands.Cog):
     def __init__(self, bot):
@@ -14,18 +16,32 @@ class Ask(commands.Cog):
     @app_commands.checks.cooldown(1, 15)
     async def ask(self, interaction: discord.Interaction, question: str):
         await interaction.response.defer()
+
+        key = os.getenv("GEMINI_API_KEY")
+        if not key:
+            await interaction.followup.send("No Gemini key found. Add GEMINI_API_KEY to .env.")
+            return
+
         payload = {
-            "model": MODEL,
-            "prompt": f"You are a gaming assistant for an esports team. Answer in a few sentences. If you aren't sure, say so.\n\nQuestion: {question}",
-            "stream": False,
+            "system_instruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+            "contents": [{"parts": [{"text": question}]}],
         }
+        headers = {"x-goog-api-key": key}
+
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.post(OLLAMA_URL, json=payload, timeout=aiohttp.ClientTimeout(total=120)) as resp:
+                async with session.post(GEMINI_URL, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as resp:
                     data = await resp.json()
-            answer = data.get("response", "No answer came back.")
+                    if resp.status != 200:
+                        msg = data.get("error", {}).get("message", "unknown error")
+                        answer = f"Gemini error {resp.status}: {msg}"
+                    else:
+                        answer = data["candidates"][0]["content"]["parts"][0]["text"]
+        except (KeyError, IndexError):
+            answer = "Gemini didn't send an answer back. It might have blocked the question."
         except Exception as e:
-            answer = f"Couldn't reach Ollama: {e}"
+            answer = f"Couldn't reach Gemini: {e}"
+
         await interaction.followup.send(answer[:1900])
 
     async def cog_app_command_error(self, interaction, error):
