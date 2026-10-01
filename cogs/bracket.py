@@ -23,7 +23,7 @@ class Tournament:
             size *= 2
         bye_count = size - n
         self.byes = self.alive[:bye_count] #should give the byes to the first entrants in the list
-        rest = self.alive[bye_count:]
+        rest = self.alive[bye_count:] # removes the entrants that received byes
         self.matches = [(rest[i], rest[i + 1]) for i in range(0, len(rest), 2)]
         self.winners = [None] * len(self.matches)
         self.round_closed = False
@@ -33,7 +33,7 @@ class Tournament:
         header = f"__**Round {self.round}**__"
         if self.byes:
             header += "\nBye (auto advance): " + ", ".join(f"**{e['name']}**" for e in self.byes)
-        await channel.send(header)
+        await channel.send(header) # sends the header info to discord
         for i, (a, b) in enumerate(self.matches):
             await channel.send(f"**Match {i + 1}:** {a['name']} vs {b['name']}", view=MatchView(self, i))
 
@@ -73,7 +73,7 @@ class MatchView(discord.ui.View):
                 await interaction.response.send_message("Already reported.", ephemeral=True)
                 return
 
-            winner = t.matches[self.index][slot]
+            winner = t.matches[self.index][slot] #stores the results of the matches
             t.winners[self.index] = winner
             for item in self.children:
                 item.disabled = True
