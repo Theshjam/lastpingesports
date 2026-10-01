@@ -6,7 +6,7 @@ def can_report(member):
 
 class Tournament:
     def __init__(self, entrants, on_finish):
-        self.alive = entrants
+        self.alive = entrants #who is still in the tournament
         self.round = 0
         self.byes = []
         self.matches = []
