@@ -17,12 +17,12 @@ class Tournament:
 
     def build_round(self):
         self.round += 1
-        n = len(self.alive)
+        n = len(self.alive) # how many entrants are currently alive
         size = 1
         while size < n:
             size *= 2
         bye_count = size - n
-        self.byes = self.alive[:bye_count]
+        self.byes = self.alive[:bye_count] #should give the byes to the first entrants in the list
         rest = self.alive[bye_count:]
         self.matches = [(rest[i], rest[i + 1]) for i in range(0, len(rest), 2)]
         self.winners = [None] * len(self.matches)
