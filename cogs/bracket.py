@@ -10,7 +10,7 @@ class Tournament:
         self.round = 0
         self.byes = []
         self.matches = []
-        self.winners = []
+        self.winners = [] #stores who won each match in the current round
         self.round_closed = False
         self.cancelled = False
         self.on_finish = on_finish
